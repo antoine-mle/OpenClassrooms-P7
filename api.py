@@ -10,15 +10,15 @@ classifier = pickle.load(open("classifier.pkl", "rb"))
 app = Flask(__name__)
 
 @app.route('/git_update', methods=['POST'])
-    def webhook():
-        if request.method == 'POST':
-            repo = git.Repo('./OpenClassrooms-P7')
-            origin = repo.remotes.origin
-            repo.create_head('main',origin.refs.main).set_tracking_branch(origin.refs.main).checkout()
-            origin.pull()
-            return '', 200
-        else:
-            return '', 400
+def webhook():
+    if request.method == 'POST':
+        repo = git.Repo('./OpenClassrooms-P7')
+        origin = repo.remotes.origin
+        repo.create_head('main',origin.refs.main).set_tracking_branch(origin.refs.main).checkout()
+        origin.pull()
+        return '', 200
+    else:
+        return '', 400
 
 @app.route("/")
 def hello():
