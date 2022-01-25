@@ -2,15 +2,11 @@ import pickle
 import pandas as pd
 from flask import Flask, request, jsonify
 
-# Load pretrained model
-transformer = pickle.load(open("transformer.pkl", "rb"))
-classifier = pickle.load(open("classifier.pkl", "rb"))
-
 # Init Flask app
 app = Flask(__name__)
 
 @app.route('/git_update', methods=['POST'])
-def webhook():
+def git_update():
     if request.method == 'POST':
         repo = git.Repo('./OpenClassrooms-P7')
         origin = repo.remotes.origin
@@ -30,6 +26,10 @@ def predict():
         return "Prediction page"
 
     if request.method == 'POST':
+        # Load pretrained model
+        transformer = pickle.load(open("transformer.pkl", "rb"))
+        classifier = pickle.load(open("classifier.pkl", "rb"))
+        # Parse data as JSON.
         client_input = request.get_json()
         # Convert dictionary to pandas dataframe
         client_input = pd.DataFrame(client_input)
