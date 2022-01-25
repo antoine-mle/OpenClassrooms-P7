@@ -1,9 +1,23 @@
+import os
+import git
 import pickle
 import pandas as pd
 from flask import Flask, request, jsonify
 
 # Init Flask app
 app = Flask(__name__)
+
+# Load pretrained model
+my_directory = os.path.dirname(__file__)
+pickle_transformer_path = os.path.join(my_directory, "transformer.pkl")
+with open(pickle_transformer_path, "rb") as p:
+    transformer = pickle.load(p)
+pickle_classifier_path = os.path.join(my_directory, "classifier.pkl")
+with open(pickle_classifier_path, "rb") as p:
+    classifier = pickle.load(p)
+
+#transformer = pickle.load(open("transformer.pkl", "rb"))
+#classifier = pickle.load(open("classifier.pkl", "rb"))
 
 @app.route('/git_update', methods=['POST'])
 def git_update():
@@ -39,8 +53,5 @@ def predict():
 
 if __name__ == '__main__':
     # Si en cours de DEV, mettre debug=True. Si en PROD, ne pas le mettre
-    # Load pretrained model
-    transformer = pickle.load(open("transformer.pkl", "rb"))
-    classifier = pickle.load(open("classifier.pkl", "rb"))
     app.run(debug=True)
     #app.run(debug=False)
