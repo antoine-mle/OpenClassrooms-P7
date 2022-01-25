@@ -26,10 +26,7 @@ def predict():
         return "Prediction page"
 
     if request.method == 'POST':
-        # Load pretrained model
-        transformer = pickle.load(open("transformer.pkl", "rb"))
-        classifier = pickle.load(open("classifier.pkl", "rb"))
-        # Parse data as JSON.
+        # Parse data as JSON
         client_input = request.get_json()
         # Convert dictionary to pandas dataframe
         client_input = pd.DataFrame(client_input)
@@ -42,5 +39,8 @@ def predict():
 
 if __name__ == '__main__':
     # Si en cours de DEV, mettre debug=True. Si en PROD, ne pas le mettre
+    # Load pretrained model
+    transformer = pickle.load(open("transformer.pkl", "rb"))
+    classifier = pickle.load(open("classifier.pkl", "rb"))
     app.run(debug=True)
     #app.run(debug=False)
