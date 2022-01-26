@@ -9,12 +9,15 @@ app = Flask(__name__)
 
 # Load pretrained model
 my_directory = os.path.dirname(__file__)
-pickle_transformer_path = os.path.join(my_directory, "transformer.pkl")
-with open(pickle_transformer_path, "rb") as p:
-    transformer = pickle.load(p)
-pickle_classifier_path = os.path.join(my_directory, "classifier.pkl")
-with open(pickle_classifier_path, "rb") as p:
-    classifier = pickle.load(p)
+#pickle_transformer_path = os.path.join(my_directory, "transformer.pkl")
+#with open(pickle_transformer_path, "rb") as p:
+#    transformer = pickle.load(p)
+#pickle_classifier_path = os.path.join(my_directory, "classifier.pkl")
+#with open(pickle_classifier_path, "rb") as p:
+#    classifier = pickle.load(p)
+pickle_model_objects_path = os.path.join(my_directory, "model_objects.pkl")
+with open(pickle_model_objects_path, 'rb') as handle:
+    transformer, classifier, _, _, _ = pickle.load(handle)
 
 #transformer = pickle.load(open("transformer.pkl", "rb"))
 #classifier = pickle.load(open("classifier.pkl", "rb"))
@@ -52,6 +55,4 @@ def predict():
         return jsonify(prediction=int(pred), probability=round(100 * proba, 1))
 
 if __name__ == '__main__':
-    # Si en cours de DEV, mettre debug=True. Si en PROD, ne pas le mettre
     app.run(debug=True)
-    #app.run(debug=False)

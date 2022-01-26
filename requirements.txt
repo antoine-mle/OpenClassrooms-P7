@@ -5,3 +5,5 @@ numpy==1.21.2
 plotly==5.5.0
 scikit-learn==1.0.1
 requests==2.27.1
+shap==0.40.0
+matplotlib==3.5.0

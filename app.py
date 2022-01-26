@@ -1,15 +1,28 @@
+import os
+import pickle
+import shap
 import json
 import requests
 import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
+import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 
 @st.cache
+def deserialization():
+    my_directory = os.path.dirname(__file__)
+    pickle_model_objects_path = os.path.join(my_directory, "model_objects.pkl")
+    with open(pickle_model_objects_path, 'rb') as handle:
+        transformer, classifier, explainer, features, feature_names = pickle.load(handle)
+    return explainer, features, feature_names
+explainer, features, feature_names = deserialization()
+
+@st.cache
 def load_data(path):
-    dataframe = pd.read_csv(path)
-    return dataframe
+    df = pd.read_csv(path)
+    return df
 
 # Load data
 path = "https://raw.githubusercontent.com/antoine-mle/OpenClassrooms-P7/main/dataframe.csv"
@@ -20,7 +33,7 @@ def split_data(df, num_rows):
     X = df.iloc[:,2:]
     y = df["TARGET"]
     ids = df["SK_ID_CURR"]
-    X_train, X_test, _, y_test, _, ids = train_test_split(
+    _, X_test, _, y_test, _, ids = train_test_split(
         X,
         y,
         ids,
@@ -28,25 +41,26 @@ def split_data(df, num_rows):
         random_state=42,
         stratify=y,
     )
-    y_test = y_test[:num_rows,]
+    X_test = X_test.iloc[:num_rows,]
+    y_test = y_test.iloc[:num_rows,]
     ids = list(ids[:num_rows,])
-    return X_train, X_test, y_test, ids
+    return X_test, y_test, ids
 
 # Split data
-X_train, X_test, y_test, ids = split_data(df=df, num_rows=1000)
+X_test, y_test, ids = split_data(df=df, num_rows=1000)
 
 @st.cache(allow_output_mutation=True)
 def model_prediction(input):
-    url = "http://127.0.0.1:5000/predict"
-    # url = 'http://antoinemle.eu.pythonanywhere.com/predict'
-    r = requests.post(url, json=input)
+    #url = "http://127.0.0.1:5000/predict"
+    url = 'http://antoinemle.eu.pythonanywhere.com/predict'
+    r = requests.post(url, json=input, timeout=120)
     return r.json()
 
 def main():
     st.sidebar.header("Parameters:")
     page = st.sidebar.selectbox(
         "Choose an option:",
-        ["Data Analysis", "Prediction"],
+        ["Data Analysis", "Prediction", "Feature Importance"],
         index=0,
     )
 
@@ -70,13 +84,13 @@ def main():
             options = st.multiselect(
                 "Choose a variable to analyse",
                 choice_list,
-                ["NAME_FAMILY_STATUS", "NAME_EDUCATION_TYPE", "AMT_INCOME_TOTAL", "AMT_CREDIT", "YEARS_BIRTH"])
+                ["AMT_INCOME_TOTAL", "AMT_CREDIT", "NAME_FAMILY_STATUS", "NAME_EDUCATION_TYPE", "YEARS_BIRTH"])
 
             if df_analysis[options].select_dtypes(include=['int64','float64']).shape[1] > 0:
                 graphic_style = st.sidebar.radio(
                     "Select a graphic style for numerical features",
                     ("Histogram", "Box Plot"),
-                    index=1
+                    index=0
                 )
 
             if len(options) > 1:
@@ -291,17 +305,8 @@ def main():
         st.title("Default Prediction")
         st.header("Make a prediction for client #{}".format(client_id))
 
-        client_info = st.selectbox("Show client information?", ["Yes", "No"], index=1)
-        if client_info == "Yes":
-            df_client_input = pd.DataFrame(
-                client_input.to_numpy(),
-                index=["Information"],
-                columns=client_input.columns,
-            ).astype(str).transpose()
-            st.dataframe(df_client_input)
-
-        predic_button = st.button("Predict")
-        if predic_button:
+        predict_button = st.button("Predict")
+        if predict_button:
             client_input_json = json.loads(client_input.to_json())
             pred = model_prediction(client_input_json)['prediction']
             proba = model_prediction(client_input_json)['probability']
@@ -311,6 +316,46 @@ def main():
                 st.balloons()
             else:
                 st.error("Loan not granted 😞 (default probability = {}%)".format(proba))
+
+            with st.expander("Show feature impact:"):
+                force_plot = shap.force_plot(
+                    base_value=explainer.expected_value[pred],
+                    shap_values=explainer.shap_values[pred][id_idx],
+                    features=features[id_idx],
+                    feature_names=feature_names,
+                    matplotlib=True,
+                    show=False,
+                )
+                st.pyplot(force_plot)
+
+                decision_plot, ax = plt.subplots()
+                ax = shap.decision_plot(
+                    base_value=explainer.expected_value[pred],
+                    shap_values=explainer.shap_values[pred][id_idx],
+                    features=features[id_idx],
+                    feature_names=feature_names,
+                )
+                st.pyplot(decision_plot)
+
+        with st.expander("Show client information:"):
+            df_client_input = pd.DataFrame(
+                client_input.to_numpy(),
+                index=["Information"],
+                columns=client_input.columns,
+            ).astype(str).transpose()
+            st.dataframe(df_client_input)
+
+    elif page == "Feature Importance":
+        st.title("Feature importance for prediction")
+
+        summary_plot, ax = plt.subplots()
+        ax = shap.summary_plot(
+            shap_values=explainer.shap_values,
+            features=features,
+            feature_names=feature_names,
+            plot_type='bar',
+        )
+        st.pyplot(summary_plot)
 
 if __name__ == "__main__":
     main()
