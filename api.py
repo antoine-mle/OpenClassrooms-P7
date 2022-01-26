@@ -16,8 +16,7 @@ my_directory = os.path.dirname(__file__)
 #with open(pickle_classifier_path, "rb") as p:
 #    classifier = pickle.load(p)
 pickle_model_objects_path = os.path.join(my_directory, "model_objects.pkl")
-with open(pickle_model_objects_path, 'rb') as handle:
-    transformer, classifier = pickle.load(handle)[:2]
+transformer, classifier = pickle.load(open(pickle_model_objects_path, 'rb'))[:2]
 
 #pickle.load(open("model_objects.pkl", "rb"))
 
