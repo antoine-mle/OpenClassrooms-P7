@@ -1,16 +1,22 @@
+import json
+import requests
 import streamlit as st
 import pandas as pd
 import numpy as np
-import pickle
-from sklearn.model_selection import train_test_split
 import plotly.express as px
+from sklearn.model_selection import train_test_split
 
-## TO DO:
-# - retirer les ouliers IQ1 / IQ3 de df
+@st.cache
+def load_data(path):
+    dataframe = pd.read_csv(path)
+    return dataframe
 
-def load_data(num_rows):
-    path = "/Users/antoinepinault/Jupyter/Data Science/OpenClassrooms/Projet7/PROJET"
-    df = pd.read_csv(path + "/dataframe.csv")
+# Load data
+path = "https://raw.githubusercontent.com/antoine-mle/OpenClassrooms-P7/main/dataframe.csv"
+df = load_data(path=path)
+
+@st.cache
+def split_data(df, num_rows):
     X = df.iloc[:,2:]
     y = df["TARGET"]
     ids = df["SK_ID_CURR"]
@@ -24,7 +30,17 @@ def load_data(num_rows):
     )
     y_test = y_test[:num_rows,]
     ids = list(ids[:num_rows,])
-    return df, X_train, X_test, y_test, ids
+    return X_train, X_test, y_test, ids
+
+# Split data
+X_train, X_test, y_test, ids = split_data(df=df, num_rows=1000)
+
+@st.cache(allow_output_mutation=True)
+def model_prediction(input):
+    url = "http://127.0.0.1:5000/predict"
+    # url = 'http://antoinemle.eu.pythonanywhere.com/predict'
+    r = requests.post(url, json=input)
+    return r.json()
 
 def main():
     st.sidebar.header("Parameters:")
@@ -33,13 +49,6 @@ def main():
         ["Data Analysis", "Prediction"],
         index=0,
     )
-
-    # Reads in saved classification model
-    classifier = pickle.load(open("classifier.pkl", "rb"))
-    transformer = pickle.load(open("transformer.pkl", "rb"))
-
-    # Load data
-    df, X_train, X_test, y_test, ids = load_data(1000)
 
     if page == "Data Analysis":
         st.title("Data Exploration")
@@ -277,33 +286,31 @@ def main():
         sorted_ids = sorted(ids)
         client_id = st.sidebar.selectbox("Select a client ID:", sorted_ids)
         id_idx = ids.index(client_id)
-        test_input = X_test.iloc[[id_idx], :]
+        client_input = X_test.iloc[[id_idx], :]
 
         st.title("Default Prediction")
         st.header("Make a prediction for client #{}".format(client_id))
 
         client_info = st.selectbox("Show client information?", ["Yes", "No"], index=1)
         if client_info == "Yes":
-            df_test_input = pd.DataFrame(
-                test_input.to_numpy(),
+            df_client_input = pd.DataFrame(
+                client_input.to_numpy(),
                 index=["Information"],
-                columns=test_input.columns,
+                columns=client_input.columns,
             ).astype(str).transpose()
-            #df_test_input = np.transpose(df_test_input)
-            st.dataframe(df_test_input)
+            st.dataframe(df_client_input)
 
         predic_button = st.button("Predict")
         if predic_button:
-            test_input_trans = transformer.transform(test_input)
-            prediction = classifier.predict(test_input_trans)[0]
-            proba = classifier.predict_proba(test_input_trans)[0]
-            true_value = y_test.iloc[id_idx]
-            if prediction == 0:
-                st.success("Loan granted 🙂 (refund probability = {}%)".format(round(100 * proba[prediction], 1)))
+            client_input_json = json.loads(client_input.to_json())
+            pred = model_prediction(client_input_json)['prediction']
+            proba = model_prediction(client_input_json)['probability']
+            #true_value = y_test.iloc[id_idx]
+            if pred == 0:
+                st.success("Loan granted 🙂 (refund probability = {}%)".format(proba))
                 st.balloons()
             else:
-                st.error("Loan not granted 😞 (default probability = {}%)".format(round(100 * proba[prediction], 1)))
-
+                st.error("Loan not granted 😞 (default probability = {}%)".format(proba))
 
 if __name__ == "__main__":
     main()
