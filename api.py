@@ -8,19 +8,24 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 # Load pretrained model
-my_directory = os.path.dirname(__file__)
+#my_directory = os.path.dirname(__file__)
 #pickle_transformer_path = os.path.join(my_directory, "transformer.pkl")
 #with open(pickle_transformer_path, "rb") as p:
 #    transformer = pickle.load(p)
 #pickle_classifier_path = os.path.join(my_directory, "classifier.pkl")
 #with open(pickle_classifier_path, "rb") as p:
 #    classifier = pickle.load(p)
-pickle_model_objects_path = os.path.join(my_directory, "model_objects.pkl")
-with open(pickle_model_objects_path, 'rb') as handle:
-    transformer, classifier, _, _, _ = pickle.load(handle)
+#pickle_model_objects_path = os.path.join(my_directory, "model_objects.pkl")
+#with open(pickle_model_objects_path, 'rb') as handle:
+#    transformer, classifier, _, _, _ = pickle.load(handle)
 
-#transformer = pickle.load(open("transformer.pkl", "rb"))
-#classifier = pickle.load(open("classifier.pkl", "rb"))
+def deserialization():
+    my_directory = os.path.dirname(__file__)
+    pickle_model_objects_path = os.path.join(my_directory, "model_objects.pkl")
+    with open(pickle_model_objects_path, 'rb') as handle:
+        transformer, classifier, explainer, features, feature_names = pickle.load(handle)
+    return transformer, classifier
+transformer, classifier = deserialization()
 
 @app.route('/git_update', methods=['POST'])
 def git_update():
