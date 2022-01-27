@@ -10,27 +10,34 @@ import plotly.express as px
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 
+
 @st.cache
 def deserialization():
-    my_directory = os.path.dirname(__file__)
-    pickle_model_objects_path = os.path.join(my_directory, "interpretation_objects.pkl")
-    with open(pickle_model_objects_path, "rb") as handle:
-        explainer, features, feature_names = pickle.load(handle)
+    #my_directory = os.path.dirname(__file__)
+    #pickle_model_objects_path = os.path.join(my_directory, "interpretation_objects.pkl")
+    #with open(pickle_model_objects_path, "rb") as handle:
+    #    explainer, features, feature_names = pickle.load(handle)
+    explainer, features, feature_names = pickle.load(open("interpretation_objects.pkl", "rb"))
     return explainer, features, feature_names
+
+
 explainer, features, feature_names = deserialization()
+
 
 @st.cache
 def load_data(path):
     df = pd.read_csv(path)
     return df
 
+
 # Load data
 path = "https://raw.githubusercontent.com/antoine-mle/OpenClassrooms-P7/main/dataframe.csv"
 df = load_data(path=path)
 
+
 @st.cache
 def split_data(df, num_rows):
-    X = df.iloc[:,2:]
+    X = df.iloc[:, 2:]
     y = df["TARGET"]
     ids = df["SK_ID_CURR"]
     _, X_test, _, y_test, _, ids = train_test_split(
@@ -41,20 +48,23 @@ def split_data(df, num_rows):
         random_state=42,
         stratify=y,
     )
-    X_test = X_test.iloc[:num_rows,]
-    y_test = y_test.iloc[:num_rows,]
-    ids = list(ids[:num_rows,])
+    X_test = X_test.iloc[:num_rows, ]
+    y_test = y_test.iloc[:num_rows, ]
+    ids = list(ids[:num_rows, ])
     return X_test, y_test, ids
+
 
 # Split data
 X_test, y_test, ids = split_data(df=df, num_rows=1000)
+
 
 @st.cache(allow_output_mutation=True)
 def model_prediction(input):
     #url = "http://127.0.0.1:5000/predict"
     url = 'http://antoinemle.eu.pythonanywhere.com/predict'
-    r = requests.post(url, json=input, timeout=600)
+    r = requests.post(url, json=input, timeout=120)
     return r.json()
+
 
 def main():
     st.sidebar.header("Parameters:")
@@ -86,11 +96,11 @@ def main():
                 choice_list,
                 ["AMT_INCOME_TOTAL", "AMT_CREDIT", "NAME_FAMILY_STATUS", "NAME_EDUCATION_TYPE", "YEARS_BIRTH"])
 
-            if df_analysis[options].select_dtypes(include=['int64','float64']).shape[1] > 0:
+            if df_analysis[options].select_dtypes(include=['int64', 'float64']).shape[1] > 0:
                 graphic_style = st.sidebar.radio(
                     "Select a graphic style for numerical features",
                     ("Histogram", "Box Plot"),
-                    index=0
+                    index=0,
                 )
 
             if len(options) > 1:
@@ -109,7 +119,7 @@ def main():
                         color_discrete_sequence=px.colors.qualitative.Pastel2,
                     )
                     if len(options) > 1:
-                        if i%2 == 0:
+                        if i % 2 == 0:
                             col1.plotly_chart(fig, use_container_width=True)
                         else:
                             col2.plotly_chart(fig, use_container_width=True)
@@ -136,7 +146,7 @@ def main():
                         )
                         fig.update_layout(bargap=0.1)
                     if len(options) > 1:
-                        if i%2 == 0:
+                        if i % 2 == 0:
                             col1.plotly_chart(fig, use_container_width=True)
                         else:
                             col2.plotly_chart(fig, use_container_width=True)
@@ -200,8 +210,8 @@ def main():
                 )
 
                 fig.update_traces(
-                marker = dict(line=dict(width=0), size=3),
-                selector = dict(mode='markers')
+                    marker=dict(line=dict(width=0), size=3),
+                    selector=dict(mode='markers')
                 )
 
                 st.plotly_chart(fig, use_container_width=True)
@@ -308,9 +318,9 @@ def main():
         predict_button = st.button("Predict")
         if predict_button:
             client_input_json = json.loads(client_input.to_json())
-            pred = model_prediction(client_input_json)['prediction']
-            proba = model_prediction(client_input_json)['probability']
-            #true_value = y_test.iloc[id_idx]
+            pred = model_prediction(client_input_json)["prediction"]
+            proba = model_prediction(client_input_json)["probability"]
+            # true_value = y_test.iloc[id_idx]
             if pred == 0:
                 st.success("Loan granted 🙂 (refund probability = {}%)".format(proba))
                 st.balloons()
@@ -356,6 +366,7 @@ def main():
             plot_type='bar',
         )
         st.pyplot(summary_plot)
+
 
 if __name__ == "__main__":
     main()
