@@ -7,3 +7,4 @@ scikit-learn==1.0.1
 requests==2.27.1
 shap==0.40.0
 matplotlib==3.5.0
+alibi==0.6.2
