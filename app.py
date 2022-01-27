@@ -3,6 +3,7 @@ import pickle
 import shap
 import json
 import requests
+import alibi
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -13,14 +14,13 @@ from sklearn.model_selection import train_test_split
 
 @st.cache
 def deserialization():
-    #my_directory = os.path.dirname(__file__)
-    #pickle_model_objects_path = os.path.join(my_directory, "interpretation_objects.pkl")
-    #with open(pickle_model_objects_path, "rb") as handle:
-    #    explainer, features, feature_names = pickle.load(handle)
-    explainer, features, feature_names = pickle.load(open("interpretation_objects.pkl", "rb"))
+    my_directory = os.path.dirname(__file__)
+    pickle_model_objects_path = os.path.join(my_directory, "interpretation_objects.pkl")
+    with open(pickle_model_objects_path, "rb") as handle:
+        explainer, features, feature_names = pickle.load(handle)
     return explainer, features, feature_names
 
-
+# Load shap explainer
 explainer, features, feature_names = deserialization()
 
 
