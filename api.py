@@ -7,16 +7,11 @@ from flask import Flask, request, jsonify
 # Init Flask app
 app = Flask(__name__)
 
-# Load pretrained model
+# Load model objects
 my_directory = os.path.dirname(__file__)
-pickle_transformer_path = os.path.join(my_directory, "transformer.pkl")
-with open(pickle_transformer_path, "rb") as p:
-    transformer = pickle.load(p)
-pickle_classifier_path = os.path.join(my_directory, "classifier.pkl")
-with open(pickle_classifier_path, "rb") as p:
-    classifier = pickle.load(p)
-#pickle_model_objects_path = os.path.join(my_directory, "model_objects.pkl")
-#transformer, classifier = pickle.load(open(pickle_model_objects_path, 'rb'))[:2]
+pickle_model_objects_path = os.path.join(my_directory, "model_objects.pkl")
+with open(pickle_model_objects_path, "rb") as handle:
+    transformer, classifier = pickle.load(handle)
 
 @app.route('/git_update', methods=['POST'])
 def git_update():
@@ -33,12 +28,12 @@ def git_update():
 def hello():
     return "Machine learning API"
 
-@app.route("/predict", methods=['POST','GET'])
+@app.route("/predict", methods=["POST","GET"])
 def predict():
-    if request.method == 'GET':
+    if request.method == "GET":
         return "Prediction page"
 
-    if request.method == 'POST':
+    if request.method == "POST":
         # Parse data as JSON
         client_input = request.get_json()
         # Convert dictionary to pandas dataframe
