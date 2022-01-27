@@ -13,9 +13,9 @@ from sklearn.model_selection import train_test_split
 @st.cache
 def deserialization():
     my_directory = os.path.dirname(__file__)
-    pickle_model_objects_path = os.path.join(my_directory, "model_objects.pkl")
-    with open(pickle_model_objects_path, 'rb') as handle:
-        transformer, classifier, explainer, features, feature_names = pickle.load(handle)
+    pickle_model_objects_path = os.path.join(my_directory, "interpretation_objects.pkl")
+    with open(pickle_model_objects_path, "rb") as handle:
+        explainer, features, feature_names = pickle.load(handle)
     return explainer, features, feature_names
 explainer, features, feature_names = deserialization()
 
@@ -53,7 +53,7 @@ X_test, y_test, ids = split_data(df=df, num_rows=1000)
 def model_prediction(input):
     #url = "http://127.0.0.1:5000/predict"
     url = 'http://antoinemle.eu.pythonanywhere.com/predict'
-    r = requests.post(url, json=input, timeout=120)
+    r = requests.post(url, json=input, timeout=600)
     return r.json()
 
 def main():
