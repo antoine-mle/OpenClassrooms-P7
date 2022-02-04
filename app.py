@@ -330,8 +330,8 @@ def main():
 
             with st.expander("Show feature impact:"):
                 force_plot = shap.force_plot(
-                    base_value=explainer.expected_value[pred],
-                    shap_values=explainer.shap_values[pred][id_idx],
+                    base_value=explainer.expected_value[0],
+                    shap_values=explainer.shap_values[0][id_idx],
                     features=features[id_idx],
                     feature_names=feature_names,
                     matplotlib=True,
@@ -341,8 +341,8 @@ def main():
 
                 decision_plot, ax = plt.subplots()
                 ax = shap.decision_plot(
-                    base_value=explainer.expected_value[pred],
-                    shap_values=explainer.shap_values[pred][id_idx],
+                    base_value=explainer.expected_value[0],
+                    shap_values=explainer.shap_values[0][id_idx],
                     features=features[id_idx],
                     feature_names=feature_names,
                 )
