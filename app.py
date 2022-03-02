@@ -31,7 +31,8 @@ def load_data(path):
 
 
 # Load data
-path = "https://raw.githubusercontent.com/antoine-mle/OpenClassrooms-P7/main/dataframe.csv"
+#path = "https://raw.githubusercontent.com/antoine-mle/OpenClassrooms-P7/main/dataframe.csv"
+path = "https://raw.githubusercontent.com/antoine-mle/OpenClassrooms-P7/main/dataframe.csv?token=GHSAT0AAAAAABPW43BCGZO37532PFZSI4AIYQ7RWGQ"
 df = load_data(path=path)
 
 
